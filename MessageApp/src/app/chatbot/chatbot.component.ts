@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, ElementRef, Renderer2, ViewChild } from '@angular/core';
+import { Component, ElementRef, HostListener, OnDestroy, OnInit, Renderer2, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
 @Component({
@@ -8,12 +8,29 @@ import { FormsModule } from '@angular/forms';
   templateUrl: './chatbot.component.html',
   styleUrl: './chatbot.component.css'
 })
-export class ChatbotComponent {
+export class ChatbotComponent implements OnInit, OnDestroy {
   @ViewChild('chatContainer', { static: false }) chatContainer!: ElementRef;
   userInput: string = '';
   isLoading: boolean = false;
 
   constructor(private renderer: Renderer2) {}
+
+  ngOnInit() {
+    window.addEventListener('beforeunload', this.confirmRefresh);
+  }
+
+  ngOnDestroy() {
+    window.removeEventListener('beforeunload', this.confirmRefresh);
+  }
+
+  confirmRefresh(event: BeforeUnloadEvent): string | void {
+    const confirmationMessage = "If you refresh the page, chat history will be cleared. Are you sure?";
+    
+    if (!confirm(confirmationMessage)) {
+      event.preventDefault();
+      return ""; // Returning an empty string to satisfy TypeScript
+    }
+  }
 
   sendMessage() {
     if (!this.userInput.trim()) return;
